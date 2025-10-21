@@ -1,39 +1,32 @@
 {
   "name": "family-newsletter",
   "version": "1.0.0",
-  "description": "Family Newsletter Application",
+  "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "create-super-admin": "ts-node --compiler-options {\\&quot;module\\&quot;:\\&quot;commonjs\\&quot;} scripts/create-super-admin.ts"
+    "postinstall": "prisma generate"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.17.1",
-    "@sendgrid/mail": "^8.1.6",
-    "@tailwindcss/postcss": "^4.1.14",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.8.1",
-    "@types/react": "^19.2.2",
-    "autoprefixer": "^10.4.21",
-    "bcryptjs": "^3.0.2",
-    "date-fns": "^4.1.0",
+    "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "next": "^15.5.6",
-    "postcss": "^8.5.6",
-    "prisma": "^6.17.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.14",
-    "typescript": "^5.9.3"
+    "next": "15.5.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "prisma": "^6.17.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5"
   }
 }
