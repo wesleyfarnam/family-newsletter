@@ -131,13 +131,13 @@ export async function POST(request: NextRequest) {
         role: user.role
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 Registration API error:', error)
-    console.error('Stack trace:', error.stack)
+    console.error('Stack trace:', error?.stack)
     return NextResponse.json(
       { 
         error: 'Failed to register user',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
       },
       { status: 500 }
     )
