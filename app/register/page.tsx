@@ -35,6 +35,8 @@ function RegisterForm() {
     setLoading(true)
 
     try {
+      console.log('🚀 Attempting registration...', { email: formData.email, name: formData.name })
+      
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,15 +47,25 @@ function RegisterForm() {
         })
       })
 
+      console.log('📡 Response status:', response.status)
+      
       const data = await response.json()
+      console.log('📦 Response data:', data)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed')
+        const errorMessage = data.error || 'Registration failed'
+        console.error('❌ Registration failed:', errorMessage)
+        if (data.details) {
+          console.error('📋 Error details:', data.details)
+        }
+        throw new Error(errorMessage)
       }
 
+      console.log('✅ Registration successful! Redirecting to admin...')
       router.push('/admin')
     } catch (err: any) {
-      setError(err.message)
+      console.error('💥 Registration error caught:', err)
+      setError(err.message || 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -109,9 +121,8 @@ function RegisterForm() {
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Create a password"
+            placeholder="••••••••"
           />
-          <p className="mt-1 text-sm text-gray-500">Must be at least 6 characters</p>
         </div>
 
         <div>
@@ -124,84 +135,64 @@ function RegisterForm() {
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Confirm your password"
+            placeholder="••••••••"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
-            Sign In
-          </Link>
-        </p>
-      </div>
-
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center">
-          By creating an account, you agree to our Terms of Service and Privacy Policy
-        </p>
-      </div>
     </>
   )
 }
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">F</span>
               </div>
-              <span className="text-xl font-semibold text-gray-900">My Family Newsletter</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Family Newsletter
+              </span>
             </Link>
-            <Link href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+            <Link 
+              href="/login"
+              className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+            >
               Sign In
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex items-center justify-center pt-16">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
-            <p className="text-gray-600">Start keeping your family connected today</p>
+            <p className="text-gray-600">Start connecting with your family today</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <Suspense fallback={
-              <div className="text-center py-8">
-                <div className="inline-block w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            }>
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <Suspense fallback={<div>Loading...</div>}>
               <RegisterForm />
             </Suspense>
-          </div>
 
-          <div className="mt-6 text-center">
-            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Home
-            </Link>
+            <div className="mt-6 text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                Sign in
+              </Link>
+            </div>
           </div>
         </div>
       </div>
