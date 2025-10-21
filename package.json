@@ -1,0 +1,39 @@
+{
+  "name": "family-newsletter",
+  "version": "1.0.0",
+  "description": "Family Newsletter Application",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "create-super-admin": "ts-node --compiler-options {\\&quot;module\\&quot;:\\&quot;commonjs\\&quot;} scripts/create-super-admin.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "@sendgrid/mail": "^8.1.6",
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.8.1",
+    "@types/react": "^19.2.2",
+    "autoprefixer": "^10.4.21",
+    "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^15.5.6",
+    "postcss": "^8.5.6",
+    "prisma": "^6.17.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
