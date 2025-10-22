@@ -19,28 +19,37 @@ export async function POST(
     }
 
     // Get edition with all responses
-    const edition = await prisma.newsletterEdition.findUnique({
-      where: { id },
+        const edition = await prisma.newsletterEdition.findUnique({
+      where: { id: editionId },
       include: {
         newsletter: {
           include: {
-            admin: true
-          }
-        },
-        responses: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true
+            members: {
+              include: {
+                user: true
               }
             },
-            media: true
+            questionnaires: {
+              include: {
+                responses: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true
+                      }
+                    },
+                    media: true
+                  }
+                }
+              }
+            }
           }
         }
       }
     })
+
 
     if (!edition) {
       return NextResponse.json(
