@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { sendNewsletterEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email'
 
 export async function POST(
   request: NextRequest,
@@ -63,12 +63,12 @@ export async function POST(
 
     // Send emails to all recipients
     const emailPromises = recipients.map(email =>
-      sendNewsletterEmail(
-        email,
-        edition.newsletter.name,
-        edition.title,
-        edition.content
-      )
+      sendEmail({
+        to: email,
+        subject: `${edition.newsletter.name}: ${edition.title}`,
+        html: edition.content,
+        text: edition.content
+      })
     )
 
     await Promise.all(emailPromises)
