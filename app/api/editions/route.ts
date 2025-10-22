@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { generateEditionId } from '@/lib/id-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     // Create edition
     const edition = await prisma.newsletterEdition.create({
       data: {
+        id: generateEditionId(),
         newsletterId,
         editionNumber,
         specialQuestion,

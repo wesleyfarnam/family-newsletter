@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { generateResponseId } from '@/lib/id-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
     // Create new response
     const response = await prisma.response.create({
       data: {
+        id: generateResponseId(),
         userId: currentUser.userId,
         questionnaireId,
         editionId,

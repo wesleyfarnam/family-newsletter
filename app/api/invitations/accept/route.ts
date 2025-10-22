@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { hashPassword, generateToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { generateUserId, generateMemberId } from '@/lib/id-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
+        id: generateUserId(),
         email: invitation.email,
         password: hashedPassword,
         name,
