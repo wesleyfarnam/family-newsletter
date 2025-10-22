@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { sendEmail, generateNewsletterEmail } from '@/lib/email'
+import { sendNewsletterEmail } from '@/lib/email'
 
 export async function POST(
   request: NextRequest,
@@ -9,17 +9,14 @@ export async function POST(
 ) {
   try {
     const currentUser = await getCurrentUser()
-    const { id } = await params
-
-    if (!currentUser || currentUser.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get edition with all responses
-        const edition = await prisma.newsletterEdition.findUnique({
+    const { id: editionId } = await params
+
+    // Get edition with all related data
+    const edition = await prisma.newsletterEdition.findUnique({
       where: { id: editionId },
       include: {
         newsletter: {
@@ -50,55 +47,56 @@ export async function POST(
       }
     })
 
-
     if (!edition) {
-      return NextResponse.json(
-        { error: 'Edition not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Edition not found' }, { status: 404 })
     }
 
+    // Check if user is admin
     if (edition.newsletter.adminId !== currentUser.userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Get all USER2 (recipients)
-    const recipients = await prisma.user.findMany({
-      where: { role: 'USER2' }
-    })
-
-    // Generate newsletter HTML
-    const newsletterHtml = generateNewsletterEmail(edition, edition.responses, edition.newsletter)
+    // Get all recipients (members + admin)
+    const recipients = edition.newsletter.members
+      .map(member => member.user.email)
+      .filter(email => email)
 
     // Send emails to all recipients
-    for (const recipient of recipients) {
-      await sendEmail(
-        recipient.email,
-        `${edition.newsletter.title} - Edition #${edition.editionNumber}`,
-        newsletterHtml
+    const emailPromises = recipients.map(email =>
+      sendNewsletterEmail(
+        email,
+        edition.newsletter.name,
+        edition.title,
+        edition.content
       )
-    }
+    )
 
-    // Update edition status
+    await Promise.all(emailPromises)
+
+    // Update edition as published
     await prisma.newsletterEdition.update({
-      where: { id },
+      where: { id: editionId },
       data: {
-        status: 'SENT',
-        sentAt: new Date()
+        publishedAt: new Date()
+      }
+    })
+
+    // Update newsletter last sent date
+    await prisma.newsletter.update({
+      where: { id: edition.newsletter.id },
+      data: {
+        lastEditionSentAt: new Date()
       }
     })
 
     return NextResponse.json({
-      success: true,
+      message: 'Newsletter sent successfully',
       recipientCount: recipients.length
     })
   } catch (error) {
-    console.error('Send edition error:', error)
+    console.error('Send newsletter error:', error)
     return NextResponse.json(
-      { error: 'Failed to send edition' },
+      { error: 'Failed to send newsletter' },
       { status: 500 }
     )
   }
