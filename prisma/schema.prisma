@@ -1,247 +1,152 @@
-// This is your Prisma schema file
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String?
-  name      String?
-  role      UserRole @default(USER2)
-  invitedBy String?
-  inviter   User?    @relation("UserInvitations", fields: [invitedBy], references: [id])
-  invitees  User[]   @relation("UserInvitations")
-  
-  // Password reset fields
-  resetToken       String?   @unique
-  resetTokenExpiry DateTime?
-  
-  // Notification preferences
-  emailNotifications Boolean @default(true)
-  reminderFrequency  Int     @default(3) // Days before due date
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  adminNewsletters     Newsletter[]           @relation("AdminNewsletters")
-  memberNewsletters    NewsletterMember[]
-  responses            Response[]
-  uploadedMedia        Media[]
-  sentNotifications    Notification[]         @relation("NotificationSender")
-  receivedNotifications Notification[]        @relation("NotificationReceiver")
-}
-
-model Newsletter {
-  id              String              @id @default(uuid())
-  adminId         String
-  admin           User                @relation("AdminNewsletters", fields: [adminId], references: [id])
-  
-  title           String
-  frequency       NewsletterFrequency
-  emailTemplate   String              @default("classic")
-  colorScheme     String              @default("ocean-blue")
-  status          NewsletterStatus    @default(DRAFT)
-  
-  // Notification settings
-  lastEditionSentAt DateTime?
-  reminderEnabled   Boolean  @default(true)
-  reminderDays      Int      @default(14) // Remind admin after X days
-  
-  scheduledFor    DateTime?
-  sentAt          DateTime?
-  
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  
-  // Relations
-  questionnaires  Questionnaire[]
-  editions        NewsletterEdition[]
-  members         NewsletterMember[]
-  notifications   Notification[]
-}
-
-// New: Many-to-many relationship for users and newsletters
-model NewsletterMember {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  newsletterId String
-  newsletter   Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
-  
-  role         MemberRole @default(CONTRIBUTOR)
-  joinedAt     DateTime   @default(now())
-  
-  @@unique([userId, newsletterId])
-}
-
-model Questionnaire {
-  id           String   @id @default(uuid())
-  newsletterId String
-  newsletter   Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
-  
-  title        String
-  description  String?
-  questions    Json     // Array of question objects
-  isActive     Boolean  @default(true)
-  dueDate      DateTime? // When responses are due
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relations
-  responses    Response[]
-}
-
-model NewsletterEdition {
-  id              String   @id @default(uuid())
-  newsletterId    String
-  newsletter      Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
-  
-  editionNumber   Int
-  title           String?
-  specialQuestion String?
-  status          EditionStatus @default(COLLECTING)
-  
-  scheduledFor    DateTime?
-  sentAt          DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  responses       Response[]
-}
-
-model Response {
-  id                  String            @id @default(uuid())
-  userId              String
-  user                User              @relation(fields: [userId], references: [id])
-  questionnaireId     String
-  questionnaire       Questionnaire     @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
-  editionId           String?
-  edition             NewsletterEdition? @relation(fields: [editionId], references: [id], onDelete: Cascade)
-  
-  answers             Json              // Object with questionId: answer pairs
-  specialAnswer       String?
-  
-  submittedAt         DateTime?
-  reminderSentAt      DateTime?
-  
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  
-  // Relations
-  media               Media[]
-}
-
-model Media {
-  id         String   @id @default(uuid())
-  responseId String
-  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  
-  filename   String
-  filepath   String
-  mimetype   String
-  size       Int
-  
-  createdAt  DateTime @default(now())
-}
-
-model Invitation {
-  id        String           @id @default(uuid())
-  email     String
-  role      UserRole
-  token     String           @unique
-  status    InvitationStatus @default(PENDING)
-  invitedBy String
-  
-  expiresAt DateTime
-  createdAt DateTime         @default(now())
-  acceptedAt DateTime?
-}
-
-// New: Notification tracking
-model Notification {
-  id           String           @id @default(uuid())
-  type         NotificationType
-  senderId     String?
-  sender       User?            @relation("NotificationSender", fields: [senderId], references: [id])
-  receiverId   String
-  receiver     User             @relation("NotificationReceiver", fields: [receiverId], references: [id])
-  newsletterId String?
-  newsletter   Newsletter?      @relation(fields: [newsletterId], references: [id])
-  
-  subject      String
-  message      String
-  status       NotificationStatus @default(PENDING)
-  
-  scheduledFor DateTime?
-  sentAt       DateTime?
-  readAt       DateTime?
-  
-  createdAt    DateTime         @default(now())
-}
-
-enum UserRole {
-  SUPER_ADMIN  // New: Super admin role
-  ADMIN
-  USER1
+enum Role {
   USER2
+  CONTRIBUTOR
+  ADMIN
+  SUPER_ADMIN
 }
 
-enum MemberRole {
-  CONTRIBUTOR  // USER1 equivalent
-  RECIPIENT    // USER2 equivalent
-}
-
-enum NewsletterFrequency {
+enum NewsletterFreq {
   WEEKLY
   BIWEEKLY
   MONTHLY
   QUARTERLY
 }
 
-enum NewsletterStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
-  ARCHIVED
+enum ReminderFreq {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
 }
 
-enum EditionStatus {
-  COLLECTING
-  READY
-  SENT
+model User {
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  password            String?
+  name                String?
+  role                Role           @default(USER2)
+  invitedBy           String?
+  inviter             User?          @relation("UserInvites", fields: [invitedBy], references: [id])
+  invitees            User[]         @relation("UserInvites")
+  emailNotifications  Boolean        @default(true)
+  reminderFrequency   ReminderFreq   @default(WEEKLY)
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  newsletters         Newsletter[]
+  newsletterMembers   NewsletterMember[]
+  responses           Response[]
+  notifications       Notification[]
 }
 
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  EXPIRED
+model Newsletter {
+  id                  String         @id @default(cuid())
+  name                String
+  description         String?
+  frequency           NewsletterFreq @default(MONTHLY)
+  adminId             String
+  admin               User           @relation(fields: [adminId], references: [id])
+  colorScheme         String?
+  layoutTemplate      String?
+  lastEditionSentAt   DateTime?
+  reminderEnabled     Boolean        @default(true)
+  reminderDays        Int            @default(14)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  members             NewsletterMember[]
+  questionnaires      Questionnaire[]
+  editions            NewsletterEdition[]
+  invitations         Invitation[]
+  notifications       Notification[]
 }
 
-enum NotificationType {
-  ADMIN_REMINDER      // Remind admin to create edition
-  CONTRIBUTOR_REMINDER // Remind contributor to submit response
-  EDITION_READY       // Notify admin edition is ready
-  INVITATION          // User invitation
-  PASSWORD_RESET      // Password reset notification
-  SYSTEM              // System notifications
+model NewsletterMember {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newsletterId  String
+  newsletter    Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  role          Role       @default(CONTRIBUTOR)
+  joinedAt      DateTime   @default(now())
+
+  @@unique([userId, newsletterId])
 }
 
-enum NotificationStatus {
-  PENDING
-  SENT
-  FAILED
-  CANCELLED
+model Questionnaire {
+  id            String     @id @default(cuid())
+  newsletterId  String
+  newsletter    Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  title         String
+  questions     String
+  dueDate       DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  responses     Response[]
+}
+
+model NewsletterEdition {
+  id            String     @id @default(cuid())
+  newsletterId  String
+  newsletter    Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  title         String
+  content       String
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Response {
+  id              String        @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers         String
+  submittedAt     DateTime      @default(now())
+  media           Media[]
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  responseId  String
+  response    Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  type        String
+  url         String
+  uploadedAt  DateTime @default(now())
+}
+
+model Invitation {
+  id            String     @id @default(cuid())
+  email         String
+  newsletterId  String
+  newsletter    Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  role          Role       @default(USER2)
+  token         String     @unique
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime   @default(now())
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+  newsletterId String?
+  newsletter   Newsletter? @relation(fields: [newsletterId], references: [id], onDelete: SetNull)
 }
