@@ -56,13 +56,7 @@ export async function POST(
 
     await Promise.all(emailPromises)
 
-    // Update edition as published
-    await prisma.newsletterEdition.update({
-      where: { id: editionId },
-      data: {
-        publishedAt: new Date()
-      }
-    })
+        await Promise.all(emailPromises)
 
     // Update newsletter last sent date
     await prisma.newsletter.update({
