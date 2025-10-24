@@ -1,4 +1,4 @@
-\import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
@@ -25,22 +25,6 @@ export async function POST(
               include: {
                 user: true
               }
-            },
-            questionnaires: {
-              include: {
-                responses: {
-                  include: {
-                    user: {
-                      select: {
-                        id: true,
-                        name: true,
-                        email: true
-                      }
-                    },
-                    media: true
-                  }
-                }
-              }
             }
           }
         }
@@ -65,8 +49,8 @@ export async function POST(
     const emailPromises = recipients.map(email =>
       sendEmail(
         email,
-        `${edition.newsletter.name}: ${edition.title}`,
-        edition.content
+        (edition as any).title || 'Newsletter Edition',
+        (edition as any).content || ''
       )
     )
 

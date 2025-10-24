@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    if (invitation.status !== 'PENDING') {
+    if (invitation.acceptedAt) {
       return NextResponse.json(
         { error: 'Invitation already used' },
         { status: 400 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser, generateInvitationToken } from '@/lib/auth'
 import { sendEmail, generateInvitationEmail } from '@/lib/email'
+import { generateInvitationId } from '@/lib/id-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +15,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, role } = await request.json()
+    const { email, role, newsletterId } = await request.json()
 
     // Validate input
-    if (!email || !role) {
+    if (!email || !role || !newsletterId) {
       return NextResponse.json(
-        { error: 'Email and role are required' },
+        { error: 'Email, role, and newsletter ID are required' },
         { status: 400 }
       )
     }
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     const existingInvitation = await prisma.invitation.findFirst({
       where: {
         email,
-        status: 'PENDING'
+        acceptedAt: null
       }
     })
 
@@ -65,10 +66,11 @@ export async function POST(request: NextRequest) {
     // Create invitation
     const invitation = await prisma.invitation.create({
       data: {
+        id: generateInvitationId(),
         email,
+        newsletterId,
         role,
         token,
-        invitedBy: currentUser.userId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       }
     })
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
         id: invitation.id,
         email: invitation.email,
         role: invitation.role,
-        status: invitation.status
+        expiresAt: invitation.expiresAt
       }
     })
   } catch (error) {

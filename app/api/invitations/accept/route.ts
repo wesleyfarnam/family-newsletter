@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (invitation.status !== 'PENDING') {
+    if (invitation.acceptedAt) {
       return NextResponse.json(
         { error: 'Invitation already used' },
         { status: 400 }
@@ -64,8 +64,7 @@ export async function POST(request: NextRequest) {
         email: invitation.email,
         password: hashedPassword,
         name,
-        role: invitation.role,
-        invitedBy: invitation.invitedBy
+        role: invitation.role
       }
     })
 
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
     await prisma.invitation.update({
       where: { id: invitation.id },
       data: {
-        status: 'ACCEPTED',
         acceptedAt: new Date()
       }
     })

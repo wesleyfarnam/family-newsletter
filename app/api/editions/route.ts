@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { generateEditionId } from '@/lib/id-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,38 +13,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { newsletterId, specialQuestion } = await request.json()
+    const { newsletterId, title, content } = await request.json()
 
     // Validate input
-    if (!newsletterId) {
+    if (!newsletterId || !title || !content) {
       return NextResponse.json(
-        { error: 'Newsletter ID is required' },
+        { error: 'Newsletter ID, title, and content are required' },
         { status: 400 }
       )
     }
 
-    // Get the latest edition number
-    const latestEdition = await prisma.newsletterEdition.findFirst({
-      where: { newsletterId },
-      orderBy: { editionNumber: 'desc' }
-    })
-
-    const editionNumber = latestEdition ? latestEdition.editionNumber + 1 : 1
-
     // Create edition
     const edition = await prisma.newsletterEdition.create({
       data: {
-        id: generateEditionId(),
         newsletterId,
-        editionNumber,
-        specialQuestion,
-        status: 'COLLECTING'
+        title,
+        content
       },
       include: {
         newsletter: {
           select: {
             id: true,
-            title: true
+            name: true
           }
         }
       }
@@ -85,26 +74,9 @@ export async function GET(request: NextRequest) {
     const editions = await prisma.newsletterEdition.findMany({
       where: { newsletterId },
       include: {
-        newsletter: {
-          select: {
-            id: true,
-            title: true
-          }
-        },
-        responses: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
-            },
-            media: true
-          }
-        }
+        newsletter: true
       },
-      orderBy: { editionNumber: 'desc' }
+      orderBy: { createdAt: 'desc' }
     })
 
     return NextResponse.json({ editions })
