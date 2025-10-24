@@ -31,21 +31,7 @@ export async function GET(
           orderBy: { createdAt: 'desc' }
         },
         editions: {
-          orderBy: { editionNumber: 'desc' },
-          include: {
-            responses: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true
-                  }
-                },
-                media: true
-              }
-            }
-          }
+          orderBy: { createdAt: 'desc' }
         }
       }
     })
